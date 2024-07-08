@@ -1,83 +1,50 @@
-# Set up the application and configure settings
+BEGIN
 
-Initialize the web application
+INITIALIZE server
+SET port to 3000
 
-Set database connection details
+CONNECT to database
+    SET host to 'localhost'
+    SET user to 'root'
+    SET password to 'Majicmen64'
+    SET database name to 'stock_recommendations'
 
-Set the API key for barcode lookup
+SETUP middleware
+    ALLOW cross-origin requests
+    PARSE request bodies as JSON
+    SERVE static files from 'public' directory
 
-# Define the main page route
-  Retrieve all food items from the database
-  Create the graph data
-  Display the main page with food items and graph data
+DEFINE routes
 
-# Define the route for adding a food item
-  When a request to add food is received
-    Get the food name and calories from the request
-    If food name or calories are missing
-      Return an error message
-    Add the food item to the database
-    Return a success message
-  Handle errors and return appropriate messages
+    DEFAULT route '/'
+        ON GET request
+            SEND 'index.html' from 'public' directory
 
-# Define the route for creating a day
-  When a request to create a day is received
-    Get the day name and selected food items from the request
-    If day name or food items are missing
-      Return an error message
-    Add the day and selected food items to the database
-    Return a success message
-  Handle errors and return appropriate messages
+    ROUTE '/recommended-stocks'
+        ON POST request
+            EXTRACT 'userStocks' from request body
+            QUERY all stock symbols from database
+            IF error
+                LOG error
+                RESPOND with status 500 and error message
+            ELSE
+                FILTER out user stocks from all stocks
+                SELECT 3 random stocks from remaining stocks
+                RESPOND with recommended stocks as JSON
 
-# Define the route for scanning a barcode
-  When a request to scan a barcode is received
-    Get the barcode value from the request
-    If the barcode value is missing
-      Return an error message
-    Get food information from the API using the barcode value
-    If food information is found
-      Return the food information
-    Else
-      Return an error message
-  Handle errors and return appropriate messages
+DEFINE helper function
 
-# Define the function to create graph data
-  Get daily calorie data from the database
-  Create the graph using the data
-  Return the graph data
-  Handle errors
+    FUNCTION getRandomStocks(allStocks, userStocks)
+        FILTER all stocks to exclude user stocks
+        INITIATE empty list for random stocks
+        WHILE random stocks list has less than 3 items AND available stocks exist
+            SELECT random stock from available stocks
+            ADD selected stock to random stocks list
+            REMOVE selected stock from available stocks list
+        RETURN random stocks list
 
-# Define the function to add a food item to the database
-  Connect to the database
-  Insert the food name and calories into the database
-  Save the changes
-  Handle errors and close the database connection
+START server
+    LISTEN on port 3000
+    LOG "Server is running on http://localhost:3000"
 
-# Define the function to create a day in the database
-  Connect to the database
-  Insert the day name into the database
-  Insert the selected food items for the day
-  Save the changes
-  Handle errors and close the database connection
-
-# Define the function to get all food items from the database
-  Connect to the database
-  Get all food items
-  Handle errors and close the database connection
-  Return the list of food items
-
-# Define the function to get daily calorie data from the database
-  Connect to the database
-  Get daily calorie data
-  Handle errors and close the database connection
-  Return the list of days and calorie values
-
-# Define the function to get food information from the API
-  Create the API request with the barcode value
-  Send the API request
-  If the response is successful
-    Extract the food name and calories from the response
-  Handle errors
-  Return the food name and calories
-
-# Start the web application in debug mode
+END
